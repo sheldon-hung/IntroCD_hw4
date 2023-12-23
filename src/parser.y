@@ -44,6 +44,9 @@ extern char current_line[]; /* declared in scanner.l */
 extern FILE *yyin;          /* declared by lex */
 extern char *yytext;        /* declared by lex */
 
+extern bool dumpSymbolTable;   /* declared in scanner.l */
+extern char *source_code[200]; /* declared in scanner.l */
+
 static AstNode *root;
 
 extern "C" int yylex(void);
@@ -775,13 +778,10 @@ int main(int argc, const char *argv[]) {
     }
 
     SemanticAnalyzer sema_analyzer;
+    sema_analyzer.setSymbolTableDump(dumpSymbolTable);
+    sema_analyzer.setSourceCode(source_code);
     root->accept(sema_analyzer);
-
-    // TODO: do not print this if there's any semantic error
-    printf("\n"
-           "|---------------------------------------------------|\n"
-           "|  There is no syntactic error and semantic error!  |\n"
-           "|---------------------------------------------------|\n");
+    
 
     delete root;
     fclose(yyin);

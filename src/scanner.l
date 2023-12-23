@@ -35,16 +35,18 @@ static char *current_line_ptr = current_line;
 
 static void appendToCurrentLine(const char *yytext_ptr);
 
+bool dumpSymbolTable = true;
+char *source_code[200];
 %}
 
 integer 0|[1-9][0-9]*
 float {integer}\.(0|[0-9]*[1-9])
 nonzero_integer [1-9][0-9]*
-    /* If the integral part is nonzero, then the fractional part can be either zero
-    or not. However, if the integral part is zero, the fractional part cannot be zero. */
+/* If the integral part is nonzero, then the fractional part can be either zero
+or not. However, if the integral part is zero, the fractional part cannot be zero. */
 nonzero_float ({nonzero_integer}\.(0|[0-9]*[1-9]))|(0\.([0-9]*[1-9]))
 
-    /* exclusive start condition */
+/* exclusive start condition */
 %x CCOMMENT
 
 %%
@@ -177,7 +179,7 @@ nonzero_float ({nonzero_integer}\.(0|[0-9]*[1-9]))|(0\.([0-9]*[1-9]))
 [ \t]+ { LIST_SOURCE; }
 
     /* Pseudocomment */
-"//&"[ST][+-].* {
+"//&"[STD][+-].* {
     LIST_SOURCE;
     char option = yytext[3];
     switch (option) {
@@ -187,6 +189,9 @@ nonzero_float ({nonzero_integer}\.(0|[0-9]*[1-9]))|(0\.([0-9]*[1-9]))
     case 'T':
         opt_tok = (yytext[4] == '+') ? 1 : 0;
         break;
+
+    case 'D':
+        dumpSymbolTable = (yytext[4] == '+') ? true : false;
     }
 }
 
@@ -203,6 +208,9 @@ nonzero_float ({nonzero_integer}\.(0|[0-9]*[1-9]))|(0\.([0-9]*[1-9]))
     if (opt_src) {
         printf("%d: %s\n", line_num, current_line);
     }
+
+    source_code[line_num] = strdup(current_line);
+
     ++line_num;
     col_num = 1;
     current_line[0] = '\0';
